@@ -10,9 +10,9 @@ public class ProjectDaoImpl implements ProjectDao {
         String sql = """
             INSERT INTO projects
             (client_id, project_name, location,
-             date_started, date_completed, status, total_cost, notes,
+             date_started, date_completed, status, total_cost, notes, specs,
              po_number, sales_invoice, dr_number)
-            VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+            VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
         """;
 
         try (Connection conn = DatabaseConnection.getConnection();
@@ -36,21 +36,22 @@ public class ProjectDaoImpl implements ProjectDao {
             stmt.setString(6, project.getStatus());
             stmt.setDouble(7, project.getTotalCost());
             stmt.setString(8, project.getNotes());
+            stmt.setString(9, project.getSpecs());
 
             if (project.getPoNumber() != null)
-                stmt.setInt(9, project.getPoNumber());
-            else
-                stmt.setNull(9, Types.INTEGER);
-
-            if (project.getSalesInvoice() != null)
-                stmt.setInt(10, project.getSalesInvoice());
+                stmt.setInt(10, project.getPoNumber());
             else
                 stmt.setNull(10, Types.INTEGER);
 
-            if (project.getDrNumber() != null)
-                stmt.setInt(11, project.getDrNumber());
+            if (project.getSalesInvoice() != null)
+                stmt.setInt(11, project.getSalesInvoice());
             else
                 stmt.setNull(11, Types.INTEGER);
+
+            if (project.getDrNumber() != null)
+                stmt.setInt(12, project.getDrNumber());
+            else
+                stmt.setNull(12, Types.INTEGER);
 
             stmt.executeUpdate();
 
@@ -59,7 +60,7 @@ public class ProjectDaoImpl implements ProjectDao {
                 project.setProjectId(rs.getInt(1));
             }
 
-            System.out.println("✅ Project added: " + project.getProjectName());
+            System.out.println("Project added: " + project.getProjectName());
 
         } catch (SQLException e) {
             e.printStackTrace();
@@ -78,6 +79,7 @@ public class ProjectDaoImpl implements ProjectDao {
             status=?,
             total_cost=?,
             notes=?,
+            specs=?,
             po_number=?,
             sales_invoice=?,
             dr_number=?
@@ -104,23 +106,24 @@ public class ProjectDaoImpl implements ProjectDao {
             stmt.setString(6, project.getStatus());
             stmt.setDouble(7, project.getTotalCost());
             stmt.setString(8, project.getNotes());
+            stmt.setString(9, project.getSpecs());
 
             if (project.getPoNumber() != null)
-                stmt.setInt(9, project.getPoNumber());
-            else
-                stmt.setNull(9, Types.INTEGER);
-
-            if (project.getSalesInvoice() != null)
-                stmt.setInt(10, project.getSalesInvoice());
+                stmt.setInt(10, project.getPoNumber());
             else
                 stmt.setNull(10, Types.INTEGER);
 
-            if (project.getDrNumber() != null)
-                stmt.setInt(11, project.getDrNumber());
+            if (project.getSalesInvoice() != null)
+                stmt.setInt(11, project.getSalesInvoice());
             else
                 stmt.setNull(11, Types.INTEGER);
 
-            stmt.setInt(12, project.getProjectId());
+            if (project.getDrNumber() != null)
+                stmt.setInt(12, project.getDrNumber());
+            else
+                stmt.setNull(12, Types.INTEGER);
+
+            stmt.setInt(13, project.getProjectId());
 
             stmt.executeUpdate();
             System.out.println("✅ Project updated: " + project.getProjectName());
@@ -237,6 +240,7 @@ public List<Project> getProjectsByClientName(String clientName) {
         p.setStatus(rs.getString("status"));
         p.setTotalCost(rs.getDouble("total_cost"));
         p.setNotes(rs.getString("notes"));
+        p.setSpecs(rs.getString("specs"));
         p.setPoNumber((Integer) rs.getObject("po_number"));
         p.setSalesInvoice((Integer) rs.getObject("sales_invoice"));
         p.setDrNumber((Integer) rs.getObject("dr_number"));

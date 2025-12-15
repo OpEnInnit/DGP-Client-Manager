@@ -6,6 +6,8 @@ public class Client {
     private String email;
     private String address;
     private String notes;
+    private String status;
+
 
     public Client() {}
 
@@ -46,6 +48,15 @@ public class Client {
 
     public String getNotes() { return notes; }
     public void setNotes(String notes) { this.notes = notes; }
+
+    public String getStatus() {
+    return status;
+    }
+
+    public void setStatus(String status) {
+        this.status = status;
+    }
+
 
     @Override
     public String toString() {

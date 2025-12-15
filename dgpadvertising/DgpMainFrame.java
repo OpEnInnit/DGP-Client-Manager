@@ -50,6 +50,8 @@ public class DgpMainFrame extends JFrame {
     JTextField email = new JTextField();
     JTextField address = new JTextField();
     JTextArea notes = new JTextArea(3, 20);
+    JComboBox<String> statusBox = new JComboBox<>(new String[]{"ACTIVE", "INACTIVE"});
+
 
     if (existing != null) {
         name.setText(existing.getName());
@@ -58,6 +60,7 @@ public class DgpMainFrame extends JFrame {
         email.setText(existing.getEmail());
         address.setText(existing.getAddress());
         notes.setText(existing.getNotes());
+        statusBox.setSelectedItem(existing.getStatus());
     }
 
     JPanel panel = new JPanel(new GridLayout(0, 2, 10, 6));
@@ -73,6 +76,9 @@ public class DgpMainFrame extends JFrame {
     panel.add(address);
     panel.add(new JLabel("Notes"));
     panel.add(new JScrollPane(notes));
+    panel.add(new JLabel("Status"));
+    panel.add(statusBox);
+
 
     int result = JOptionPane.showConfirmDialog(
             this,
@@ -90,6 +96,7 @@ public class DgpMainFrame extends JFrame {
     c.setEmail(email.getText().trim());
     c.setAddress(address.getText().trim());
     c.setNotes(notes.getText().trim());
+    c.setStatus((String) statusBox.getSelectedItem());
 
     return c;
 }
@@ -100,7 +107,7 @@ public class DgpMainFrame extends JFrame {
         JPanel panel = new JPanel(new BorderLayout());
 
         clientTableModel = new DefaultTableModel(
-                new Object[]{"Client ID","Name","Contact","Phone","Email", "Address"},0) {
+                new Object[]{"Client ID","Name","Contact","Phone","Email", "Address", "Status"},0) {
             public boolean isCellEditable(int r,int c){ return false; }
         };
         clientTable = new JTable(clientTableModel);
@@ -111,23 +118,22 @@ public class DgpMainFrame extends JFrame {
         JButton refresh = new JButton("Refresh");
         JButton add = new JButton("Add Client");
         JButton edit = new JButton("Edit Client");
-        JButton del = new JButton("Delete Client");
+        //deleted  JButton del = new JButton("Delete Client"); for security purposes.
         JButton export = new JButton("Export CSV");
         JButton viewNotes = new JButton("View Notes");
         viewNotes.addActionListener(this::onViewClientNotes);
         buttons.add(viewNotes);
 
-
         refresh.addActionListener(e -> loadClients());
         add.addActionListener(this::onAddClient);
         edit.addActionListener(this::onEditClient);
-        del.addActionListener(this::onDeleteClient);
+        //removed del.addActionListener(this::onDeleteClient); for security purposes.
         export.addActionListener(this::onExportCSV);
 
         buttons.add(refresh);
         buttons.add(add);
         buttons.add(edit);
-        buttons.add(del);
+        //removed buttons.add(del); for security purposes
         buttons.add(export);
 
         panel.add(buttons, BorderLayout.SOUTH);
@@ -140,7 +146,7 @@ public class DgpMainFrame extends JFrame {
         for (Client c : clientDao.getAllClients()) {
             clientTableModel.addRow(new Object[]{
                 c.getClientId(), c.getName(),
-                c.getContactPerson(), c.getPhone(), c.getEmail(), c.getAddress()
+                c.getContactPerson(), c.getPhone(), c.getEmail(), c.getAddress(), c.getStatus()
             });
         }
     }
@@ -176,6 +182,9 @@ public class DgpMainFrame extends JFrame {
         JButton edit = new JButton("Edit Project");
         JButton del = new JButton("Delete Project");
         JButton notes = new JButton("Show Notes");
+        JButton specsBtn = new JButton("Show Specs");
+        specsBtn.addActionListener(this::onShowSpecs);
+        buttons.add(specsBtn);
 
         add.addActionListener(this::onAddProject);
         edit.addActionListener(this::onEditProject);
@@ -257,23 +266,25 @@ private void onEditClient(ActionEvent e) {
         }
     }
 
-private void onDeleteClient(ActionEvent e) {
-    int row = clientTable.getSelectedRow();
-    if (row == -1) return;
+/* commented out for security purposes.
+    private void onDeleteClient(ActionEvent e) {
+        int row = clientTable.getSelectedRow();
+        if (row == -1) return;
 
-    int clientId = (int) clientTableModel.getValueAt(row, 0);
+        int clientId = (int) clientTableModel.getValueAt(row, 0);
 
-    if (JOptionPane.showConfirmDialog(
-            this,
-            "Delete this client and all projects?",
-            "Confirm",
-            JOptionPane.YES_NO_OPTION
-    ) == JOptionPane.YES_OPTION) {
+        if (JOptionPane.showConfirmDialog(
+                this,
+                "Delete this client and all projects?",
+                "Confirm",
+                JOptionPane.YES_NO_OPTION
+        ) == JOptionPane.YES_OPTION) {
 
-        clientDao.deleteClient(clientId);
-        loadClients();
+            clientDao.deleteClient(clientId);
+            loadClients();
+        }
     }
-}
+ */
 
     private void onViewClientNotes(ActionEvent e) {
         int row = clientTable.getSelectedRow();
@@ -395,7 +406,11 @@ private void onDeleteClient(ActionEvent e) {
 
     try (java.io.PrintWriter pw = new java.io.PrintWriter(file)) {
 
-        pw.println("Client ID,Client Name,Project ID,Project Name,Location,Start Date,End Date,PO,Invoice,DR,Status,Cost");
+        pw.println(
+            "Client ID,Client Name,Project ID,Project Name,Location," +
+            "Start Date,End Date,PO,Invoice,DR,Status,Cost,Notes,Specs"
+        );
+
 
         for (Client c : clientDao.getAllClients()) {
             List<Project> projects = projectDao.getProjectsByClient(c.getClientId());
@@ -406,7 +421,7 @@ private void onDeleteClient(ActionEvent e) {
             } else {
                 for (Project p : projects) {
                     pw.printf(
-                        "%d,\"%s\",%d,\"%s\",\"%s\",%s,%s,%s,%s,%s,\"%s\",%.2f\n",
+                        "%d,\"%s\",%d,\"%s\",\"%s\",%s,%s,%s,%s,%s,\"%s\",%.2f,\"%s\",\"%s\"\n",
                         c.getClientId(),
                         c.getName(),
                         p.getProjectId(),
@@ -418,7 +433,9 @@ private void onDeleteClient(ActionEvent e) {
                         p.getSalesInvoice(),
                         p.getDrNumber(),
                         p.getStatus(),
-                        p.getTotalCost()
+                        p.getTotalCost(),
+                        escapeCsv(p.getNotes()),
+                        escapeCsv(p.getSpecs())
                     );
                 }
             }
@@ -450,6 +467,7 @@ private void onDeleteClient(ActionEvent e) {
     );
     JTextField costField = new JTextField();
     JTextArea notesArea = new JTextArea(4, 20);
+    JTextArea specsArea = new JTextArea(4,20);
 
     if (existing != null) {
         nameField.setText(existing.getProjectName());
@@ -473,6 +491,7 @@ private void onDeleteClient(ActionEvent e) {
         statusBox.setSelectedItem(existing.getStatus());
         costField.setText(String.valueOf(existing.getTotalCost()));
         notesArea.setText(existing.getNotes());
+        specsArea.setText(existing.getSpecs());
     }
 
     JPanel panel = new JPanel(new GridLayout(0,2,10,6));
@@ -496,6 +515,8 @@ private void onDeleteClient(ActionEvent e) {
     panel.add(costField);
     panel.add(new JLabel("Notes"));
     panel.add(new JScrollPane(notesArea));
+    panel.add(new JLabel("Specs"));
+    panel.add(new JScrollPane(specsArea));
 
     int result = JOptionPane.showConfirmDialog(
         this, panel,
@@ -516,6 +537,7 @@ private void onDeleteClient(ActionEvent e) {
     p.setLocation(locationField.getText().trim());
     p.setStatus((String) statusBox.getSelectedItem());
     p.setNotes(notesArea.getText().trim());
+    p.setSpecs(specsArea.getText().trim());
 
     if (!startField.getText().isBlank()) {
     LocalDate d = parseDateSafe(startField.getText());
@@ -547,6 +569,28 @@ private void onDeleteClient(ActionEvent e) {
     return p;
 }
 
+    //helper
+    private void onShowSpecs(ActionEvent e) {
+        int row = projectTable.getSelectedRow();
+        if (row == -1) return;
+
+        int projectId = (int) projectTableModel.getValueAt(row, 0);
+        Project p = projectDao.getProjectById(projectId);
+
+        JTextArea area = new JTextArea(p.getSpecs());
+        area.setEditable(false);
+        area.setLineWrap(true);
+        area.setWrapStyleWord(true);
+
+        JOptionPane.showMessageDialog(
+            this,
+            new JScrollPane(area),
+            "Project Specs",
+            JOptionPane.INFORMATION_MESSAGE
+        );
+    }
+
+
 
     // ---------- NOTES ----------
     private void onShowNotes(ActionEvent e) {
@@ -564,6 +608,14 @@ private void onDeleteClient(ActionEvent e) {
         JOptionPane.showMessageDialog(this,new JScrollPane(area),
             "Project Notes",JOptionPane.INFORMATION_MESSAGE);
     }
+
+    //helper
+
+        private String escapeCsv(String value) {
+        if (value == null) return "";
+        return value.replace("\"", "\"\"");
+    }
+
 
     // ---------- MAIN ----------
     public static void main(String[] args) {

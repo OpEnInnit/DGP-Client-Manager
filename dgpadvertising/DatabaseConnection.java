@@ -41,7 +41,8 @@ public class DatabaseConnection {
                     phone          TEXT,
                     email          TEXT,
                     address        TEXT,
-                    notes          TEXT
+                    notes          TEXT,
+                    status         TEXT DEFAULT 'ACTIVE'
                 );
             """);
 
@@ -57,6 +58,7 @@ public class DatabaseConnection {
                 status         TEXT,
                 total_cost     REAL,
                 notes          TEXT,
+                specs          TEXT,
                 po_number      INTEGER,
                 sales_invoice  INTEGER,
                 dr_number      INTEGER,

@@ -6,7 +6,7 @@ public class ClientDaoImpl implements ClientDao {
 
     @Override
     public void addClient(Client client) {
-        String sql = "INSERT INTO clients (name, contact_person, phone, email, address, notes) VALUES (?, ?, ?, ?, ?, ?)";
+        String sql = "INSERT INTO clients (name, contact_person, phone, email, address, notes, status) VALUES (?, ?, ?, ?, ?, ?, ?)";
 
         try (Connection conn = DatabaseConnection.getConnection();
              PreparedStatement stmt = conn.prepareStatement(sql, Statement.RETURN_GENERATED_KEYS)) {
@@ -17,6 +17,8 @@ public class ClientDaoImpl implements ClientDao {
             stmt.setString(4, client.getEmail());
             stmt.setString(5, client.getAddress());
             stmt.setString(6, client.getNotes());
+            stmt.setString(7, client.getStatus());
+
 
             stmt.executeUpdate();
 
@@ -35,7 +37,7 @@ public class ClientDaoImpl implements ClientDao {
 
     @Override
     public void updateClient(Client client) {
-        String sql = "UPDATE clients SET name=?, contact_person=?, phone=?, email=?, address=?, notes=? WHERE client_id=?";
+        String sql = "UPDATE clients SET name=?, contact_person=?, phone=?, email=?, address=?, notes=?, status=? WHERE client_id=?";
 
         try (Connection conn = DatabaseConnection.getConnection();
              PreparedStatement stmt = conn.prepareStatement(sql)) {
@@ -46,7 +48,8 @@ public class ClientDaoImpl implements ClientDao {
             stmt.setString(4, client.getEmail());
             stmt.setString(5, client.getAddress());
             stmt.setString(6, client.getNotes());
-            stmt.setInt(7, client.getClientId());
+            stmt.setString(7, client.getStatus());
+            stmt.setInt(8, client.getClientId());
 
             stmt.executeUpdate();
 
@@ -148,6 +151,7 @@ public class ClientDaoImpl implements ClientDao {
         c.setEmail(rs.getString("email"));
         c.setAddress(rs.getString("address"));
         c.setNotes(rs.getString("notes"));
+        c.setStatus(rs.getString("status"));
         return c;
     }
 }

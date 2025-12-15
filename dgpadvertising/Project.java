@@ -15,6 +15,7 @@ public class Project {
     private Integer poNumber;
     private Integer salesInvoice;
     private Integer drNumber;
+    private String specs;
 
 
     public Project() {}
@@ -79,6 +80,14 @@ public class Project {
 
     public String getNotes() { return notes; }
     public void setNotes(String notes) { this.notes = notes; }
+
+    public String getSpecs() {
+    return specs;
+    }
+
+    public void setSpecs(String specs) {
+        this.specs = specs;
+    }
     
     public Integer getPoNumber() {
     return poNumber;
